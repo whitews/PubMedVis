@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load url from future %}
+{% block body %}
+
+    <hr>
+
+    <div class="jumbotron">
+        <h1>Visualize References in PubMed Articles</h1>
+        <p class="lead">Enter a PubMed ID</p>
+
+        <form class="form-horizontal" action="{% url 'home' %}" method="post">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="control-group warning">
+                    <ul>
+                        {% for field in form %}
+                            {% if field.errors %}
+                                <span class="help-inline">{{ field.label }}: {{ field.errors|striptags }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            {{ form.non_field_errors }}
+
+            {% for field in form %}
+            <div class="control-group">
+                {{ field }}
+            </div>
+            {% endfor %}
+
+            <button class="btn btn-large btn-success" type="submit">Go!</a>
+
+        </form>
+    </div>
+
+    <hr>
+
+    <div class="row-fluid marketing">
+        <div class="span12">
+            <h4>Most Referenced Articles Found So Far</h4>
+            <ol>
+              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
+              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
+              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
+              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
+              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
+              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
+              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
+              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
+              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
+              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
+            </ol>
+        </div>
+    </div>
+    <hr>
+{% endblock %}

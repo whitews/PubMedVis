@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block body %}
+<h4>PubMed ID: {{ article.pubmed_id }}</h1>
+<h5>{{ article.title }}</h1>
+
+<hr>
+
+<ul>
+{% for ref_art in article.referenced_articles.all %}
+  <li><a href="{% url 'view_article' ref_art.id %}">{{ ref_art.pubmed_id }}: {{ ref_art.title }}</a></li>
+{% endfor %}
+</ul>
+
+{% endblock %}
