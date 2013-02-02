@@ -47,19 +47,19 @@ def find_articles(pubmed_id_list):
             #raise TypeError("title_text should be type str, but NoneType was found.")
 
         # Find article's authors
-#        authorlist_elements = summary_el.findall("Item[@Name='AuthorList']")
-#        authors = []
-#
-#        for el in authorlist_elements:
-#            for author_el in el.findall("Item[@Name='Author']"):
-#                authors.append(author_el.text)
+        authorlist_elements = summary_el.findall("Item[@Name='AuthorList']")
+        authors = []
+
+        for el in authorlist_elements:
+            for author_el in el.findall("Item[@Name='Author']"):
+                authors.append(author_el.text)
 
         # Great, we got a good article, add it to the list
         articles.append(
             {
                 'pubmed_id': pubmed_id,
                 'title': title_text,
-                #'authors': authors,
+                'authors': authors,
             }
         )
 

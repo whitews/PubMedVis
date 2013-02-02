@@ -27,9 +27,9 @@ def home(request):
                     article.save()
 
                     # now add the author relationships, adding the author if necessary
-#                    for name in article_dict['authors']:
-#                        author, created = Author.objects.get_or_create(name=name)
-#                        article.authors.add(author)
+                    for name in article_dict['authors']:
+                        author, created = Author.objects.get_or_create(name=name)
+                        article.authors.add(author)
 
                     # now add the references at some depth
                     article.add_references(depth=2)
@@ -57,8 +57,12 @@ def home(request):
 def view_article(request, article_id):
     article = get_object_or_404(Article, id=article_id)
 
-    #if article.referenced_articles.all().count() == 0:
-    #    article.add_references(depth=2)
+    if request.method == 'POST':
+
+        if 'refresh' in request.POST:
+            article.add_references(depth=2)
+
+        return HttpResponseRedirect(reverse('view_article', args=(article.id,)))
 
     return render_to_response(
         'view_article.html',
