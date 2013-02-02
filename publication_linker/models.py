@@ -48,10 +48,10 @@ class Article(models.Model):
             # find_articles returned a list of dictionaries, each dict is an article to save
             for ref in reference_articles:
                 article, created = Article.objects.get_or_create(pubmed_id=ref['pubmed_id'], title=ref['title'])
-                if created:
-                    for name in ref['authors']:
-                        author, created = Author.objects.get_or_create(name=name)
-                        article.authors.add(author)
+#                if created:
+#                    for name in ref['authors']:
+#                        author, created = Author.objects.get_or_create(name=name)
+#                        article.authors.add(author)
 
             # need to add article relationships
             for key in total_reference_dict.keys():
