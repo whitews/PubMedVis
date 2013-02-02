@@ -4,6 +4,7 @@ from publication_linker.query_pubmed import find_articles
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Count
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
@@ -46,10 +47,13 @@ def home(request):
     else:
         form = ArticleForm()
 
+    most_referenced_articles = Article.objects.annotate(Count('article')).order_by('-article__count')[0:5]
+
     return render_to_response(
         'home.html',
         {
             'form': form,
+            'most_referenced_articles': most_referenced_articles,
         },
         context_instance=RequestContext(request)
     )

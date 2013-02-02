@@ -35,23 +35,21 @@
         </form>
     </div>
 
-    <hr>
-
     <div class="row-fluid marketing">
         <div class="span12">
             <h4>Most Referenced Articles Found So Far</h4>
-            <ol>
-              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
-              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
-              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
-              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
-              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
-              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
-              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
-              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
-              <li>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</li>
-              <li>Morbi leo risus, porta ac consectetur ac, vestibulum at eros.</li>
-            </ol>
+            <table class="table table-hover">
+              {% for article in most_referenced_articles %}
+                <tr>
+                  <td style="text-align: center; vertical-align: middle">
+                    <span class="badge badge-info">{{ article.article_set.count }}</span>
+                  </td>
+                  <td>
+                    <a href="{% url 'view_article' article.id %}">{{ article.pubmed_id }}: {{ article.title }}</a></li>
+                  </td>
+                </tr>
+              {% endfor %}
+            </table>
         </div>
     </div>
     <hr>
