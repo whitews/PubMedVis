@@ -35,10 +35,10 @@ def home(request):
                     # now add the references at some depth
                     article.add_references(depth=2)
 
-                    return HttpResponseRedirect(reverse('view_article', args=(article.id,)))
+                    return HttpResponseRedirect(reverse('view_article', args=(article.pubmed_id,)))
 
             if article is not None:
-                return HttpResponseRedirect(reverse('view_article', args=(article.id,)))
+                return HttpResponseRedirect(reverse('view_article', args=(article.pubmed_id,)))
             else:
                 return HttpResponseRedirect(reverse('home',))
 
@@ -58,15 +58,15 @@ def home(request):
         context_instance=RequestContext(request)
     )
 
-def view_article(request, article_id):
-    article = get_object_or_404(Article, id=article_id)
+def view_article(request, pubmed_id):
+    article = get_object_or_404(Article, pubmed_id=pubmed_id)
 
     if request.method == 'POST':
 
         if 'refresh' in request.POST:
             article.add_references(depth=2)
 
-        return HttpResponseRedirect(reverse('view_article', args=(article.id,)))
+        return HttpResponseRedirect(reverse('view_article', args=(article.pubmed_id,)))
 
     return render_to_response(
         'view_article.html',

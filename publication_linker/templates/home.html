@@ -45,7 +45,7 @@
                     <span class="badge badge-info">{{ article.article_set.count }}</span>
                   </td>
                   <td>
-                    <a href="{% url 'view_article' article.id %}">{{ article.pubmed_id }}: {{ article.title }}</a></li>
+                    <a href="{% url 'view_article' article.pubmed_id %}">{{ article.pubmed_id }}: {{ article.title }}</a></li>
                   </td>
                 </tr>
               {% endfor %}

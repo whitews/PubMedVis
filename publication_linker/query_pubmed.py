@@ -109,7 +109,7 @@ def find_article_references(pubmed_id_list):
         reference_dict[parent_id] = []
 
         ref_elements = link_set.findall("LinkSetDb/Link/Id")
-        for el in ref_elements:
-            reference_dict[parent_id].append(el.text)
+
+        reference_dict[parent_id].extend([el.text for el in ref_elements])
 
     return reference_dict
