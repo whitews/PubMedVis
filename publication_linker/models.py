@@ -24,6 +24,7 @@ class Article(models.Model):
 
     def add_references(self, depth):
         # TODO: some articles genuinely have no references in PubMed, maybe flag whether articles have been checked???
+        print "%s - %s" % (datetime.now().ctime(), "START")
 
         temp_list = [self.pubmed_id]
         total_list = []
@@ -39,7 +40,11 @@ class Article(models.Model):
                 total_list.extend(referenced_dict[key])
                 total_reference_dict[key] = referenced_dict[key]
 
+            print "%s - Depth: %d" % (datetime.now().ctime(), i)
+
         del(temp_list)
+
+        print "%s - %s" % (datetime.now().ctime(), "FIND ARTICLES")
 
         if len(total_list) > 0:
 
@@ -48,42 +53,57 @@ class Article(models.Model):
 
             # only find articles we haven't already got
             # this avoids using get_or_create, which takes too long in bulk operations
-            new_pubmed_id_list = list(set(total_list) - set(existing_pubmed_id_list))
+            # IMPORTANT: the existing_pubmed_id_list contains integers, not strings,
+            # so we map to str here
+            new_pubmed_id_list = list(set(total_list) - set(map(str, existing_pubmed_id_list)))
+
+            # find all the new articles' summaries (and authors)
+            # this could take a whild
             articles_to_save = find_articles(new_pubmed_id_list)
 
             print "%s - %s" % (datetime.now().ctime(), "ARTICLES FOUND, ARTICLES TO DB")
 
             # for storing our new Article model instances
-            new_art_instance_list = []
+            new_art_instance_list = set()
+
+            # And a set to catch all the authors we'll collect in the article for loop
+            # We'll do a similar bulk_create for the new authors
+            author_set = set()
 
             # find_articles returned a list of dictionaries, each dict is an article to save
             for new_art in articles_to_save:
 
-                new_art_instance_list.append(Article(pubmed_id=new_art['pubmed_id'], title=new_art['title']))
+                new_art_instance_list.add(Article(pubmed_id=new_art['pubmed_id'], title=new_art['title']))
 
-            Article.objects.bulk_create(new_art_instance_list)
+                # Catch the authors here
+                author_set.update(new_art['authors'])
 
-            pass
+            # save the new articles in bulk
+            # TODO: maybe catch any exceptions here...look into Exceptions thrown by bulk_create
+            Article.objects.bulk_create(list(new_art_instance_list))
+
+            print "%s - %s" % (datetime.now().ctime(), "ARTICLES SAVED")
+
+            # for all the new articles created, we need to add the authors and article relationships
+            print "%s - %s" % (datetime.now().ctime(), "ARTICLE RELATIONSHIPS TO DB")
+
+            # get all the Articles corresponding to the reference dict keys which have non-empty values
+            referenced_article_list = []
+            for k in total_reference_dict.keys():
+                if len(total_reference_dict[k]) > 0:
+                    referenced_article_list.append(k)
+
+            # now get the Article model instances just for the ones with references to add
+            articles_with_refs = Article.objects.filter(pubmed_id__in=referenced_article_list)
+
+            for article in articles_with_refs:
+                references = Article.objects.filter(pubmed_id__in=total_reference_dict[str(article.pubmed_id)])
+
+                article.referenced_articles.add(*references)
 
 #                for name in new_art['authors']:
 #                    author, created = Author.objects.get_or_create(name=name)
 #                    new_art_instance.authors.add(author)
-
-#
-#            print "%s - %s" % (datetime.now().ctime(), "ARTICLE RELATIONSHIPS TO DB")
-#
-#            # need to add article relationships
-#            for key in total_reference_dict.keys():
-#                try:
-#                    article = Article.objects.get(pubmed_id=key)
-#                    for value in total_reference_dict[key]:
-#                        try:
-#                            related_articles = Article.objects.get(pubmed_id=value)
-#                        except:
-#                            continue
-#                        article.referenced_articles.add(related_articles)
-#                except:
-#                    continue
 
         print "%s - %s" % (datetime.now().ctime(), "END")
 
