@@ -5,9 +5,11 @@ from publication_linker.query_pubmed import find_articles
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
+
+import json
 
 def home(request):
     if request.method == 'POST':
@@ -58,6 +60,7 @@ def home(request):
         context_instance=RequestContext(request)
     )
 
+
 def view_article(request, pubmed_id):
     article = get_object_or_404(Article, pubmed_id=pubmed_id)
 
@@ -75,3 +78,49 @@ def view_article(request, pubmed_id):
         },
         RequestContext(request),
     )
+
+
+def article_relations(request, pubmed_id):
+    article = get_object_or_404(Article, pubmed_id=pubmed_id)
+    group_0 = [{'group': 0, 'pubmed_id': article.pubmed_id, 'title': article.title},]
+
+    # need a set of pubmed ids to prevent duplicate nodes
+    pubmed_id_set = set([article.pubmed_id])
+
+    # We're gonna do 2 things here
+    #   1: get the distinct list of referenced articles 2 levels deep, and these are the 'nodes'
+    #   2: get all the relationships between all the nodes, and these are the 'links'
+    group_1_articles = article.referenced_articles.all()
+    pubmed_id_set.update(group_1_articles.values_list('pubmed_id', flat=True))
+    group_1 = list(group_1_articles.values('pubmed_id', 'title'))
+    group_2 = []
+
+    links = []
+
+    for g in group_1:
+        links.append({'source':article.pubmed_id,'target':g['pubmed_id']})
+        g['group'] = 1
+        pubmed_id_set.add(g['pubmed_id'])
+        g_1_article = group_1_articles.get(pubmed_id=g['pubmed_id'])
+        g_1_references = g_1_article.referenced_articles.values('pubmed_id', 'title')
+        for g_1_ref in g_1_references:
+            if g_1_ref['pubmed_id'] not in pubmed_id_set:
+                pubmed_id_set.add(g_1_ref['pubmed_id'])
+                g_1_ref['group'] = 2
+                group_2.append(g_1_ref)
+            links.append({'source':g['pubmed_id'],'target':g_1_ref['pubmed_id']})
+
+    # need to iterate over group_2 to get any references matching any pubmed IDs we already have
+    for g in group_2:
+        g_2_article = Article.objects.get(pubmed_id=g['pubmed_id'])
+        g_2_references = g_2_article.referenced_articles.values('pubmed_id')
+        for g_2_ref in g_2_references:
+            if g_2_ref['pubmed_id'] in pubmed_id_set:
+                links.append({'source':g['pubmed_id'],'target':g_2_ref['pubmed_id']})
+
+    groups = group_0 + group_1 + group_2
+
+    json_data = json.dumps(dict({'nodes':groups,'links':links}), indent=4)
+
+    return HttpResponse(json_data, content_type='text/json')
+

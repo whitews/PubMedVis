@@ -33,3 +33,19 @@ body {
 .marketing p + h4 {
     margin-top: 28px;
 }
+
+/* D3 stuff */
+.node {
+    stroke: #fff;
+    stroke-width: 1.5px;
+}
+
+.link {
+    fill: none;
+    stroke: #bbb;
+}
+
+marker {
+    fill: #bbb;
+    stroke: #bbb;
+}
