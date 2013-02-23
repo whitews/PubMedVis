@@ -43,7 +43,7 @@
     var color = d3.scale.category10();
 
     var force = d3.layout.force()
-        .linkDistance(60)
+        .linkDistance(50)
         .linkStrength(function(d, i) {
             if (d.source.group == 1) {
                 return 1.0;
@@ -55,14 +55,14 @@
         })
         .charge(function(d, i) {
             if (d.group == 0) {
-                return -1000;
+                return -900;
             } else if (d.group == 1) {
-                return -1000;
+                return -900;
             } else {
                 return -80;
             }
         })
-        .gravity(0)
+        .gravity(0.1)
         .friction(0.7)
         .size([width, height]);
 
