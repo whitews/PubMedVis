@@ -43,34 +43,57 @@
     var color = d3.scale.category10();
 
     var force = d3.layout.force()
-        .linkDistance(5)
-        .linkStrength(1.0)
-        .gravity(1.8)
-        .friction(0.1)
-        .charge(-500)
+        .linkDistance(60)
+        .linkStrength(function(d, i) {
+            if (d.source.group == 1) {
+                return 1.0;
+            } else if (d.source.group == 2) {
+                return 0;
+            } else {
+                return 0;
+            }
+        })
+        .charge(function(d, i) {
+            if (d.group == 0) {
+                return -1000;
+            } else if (d.group == 1) {
+                return -1000;
+            } else {
+                return -80;
+            }
+        })
+        .gravity(0)
+        .friction(0.7)
         .size([width, height]);
+
+    var zoom = d3.behavior.zoom();
 
     var svg = d3.select("#graph").append("svg:svg")
             .attr("width", width)
-            .attr("height", height);
+            .attr("height", height)
+            .call(zoom.on("zoom", redraw))
+          .append('svg:g');
 
-{#    svg.append("svg:marker")#}
-{#            .attr("id", "triangle")#}
-{#            .attr("viewBox", "0 -5 10 10")#}
-{#            .attr("refX", 25)#}
-{#            .attr("refY", 0)#}
-{#            .attr("markerWidth", 3)#}
-{#            .attr("markerHeight", 3)#}
-{#            .attr("orient", "auto")#}
-{#          .append("path")#}
-{#            .attr("d", "M0,-5 L10,0 L0,5");#}
+    // Allow scaling and panning
+    function redraw() {
+        svg.attr("transform",
+                "translate(" + d3.event.translate + ")"
+                        + " scale(" + d3.event.scale + ")");
+    }
 
+    svg.append("svg:marker")
+            .attr("id", "triangle")
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 27)
+            .attr("refY", 0)
+            .attr("markerWidth", 9)
+            .attr("markerHeight", 9)
+            .attr("orient", "auto")
+          .append("path")
+            .attr("d", "M0,-5 L10,0 L0,5");
 
-{#    d3.json("{{ STATIC_URL }}miserables.json", function(error, graph) {#}
     d3.json("{% url 'article_relations' article.pubmed_id %}", function(error, graph) {
         var nodes = graph.nodes.slice();
-        var links = [];
-        var bilinks = [];
 
         // d3 force uses indices of the nodes for the links, so we need a hash lookup table
         var hash_lookup = {};
@@ -84,53 +107,82 @@
             d.target = hash_lookup[d.target];
         });
 
-        graph.links.forEach(function(link) {
-            var s = nodes[link.source],
-                    t = nodes[link.target],
-                    i = {}; // intermediate node
-            nodes.push(i);
-            links.push({source: s, target: i}, {source: i, target: t});
-            bilinks.push([s, i, t]);
-        });
+        // Counts of the group nodes
+        var group_1_count = nodes.filter(function (d) { return d.group == 1; }).length;
+        var group_2_count = nodes.filter(function (d) { return d.group == 2; }).length;
 
-        // Initialize the positions deterministically, for better results.
+        // Increment vars we'll use for placing the fixed nodes radially
+        var n_1 = 0;  // group 1
+        var n_2 = 0;  // group 2
+
+        // Size of the nodes by group
+        var node_0_size = 19;
+        var node_1_size = 7;
+        var node_2_size = 5;
+
+        // Create estimates of the group's radius size in the layout based
+        // 1st group is fixed, use the node radius to avoid overlap radially
+        // 2nd group is a bit harder to estimate, but they're not fixed so less of an issue
+        var r_1 = (group_1_count*(node_1_size/2) < 50) ? 50:(group_1_count*(node_1_size/2));
+        var r_2 = (group_2_count*1.2); // A bit if a magic number based on playing around
+
+        // Set the initial scaling here
+        if (r_2 > width) {
+            var initial_scale = width/(r_2);
+            var translate_x_y = width/2 - (width/2 * initial_scale);
+            svg.attr(
+                "transform",
+                "translate(" + translate_x_y + "," + translate_x_y + ") scale(" + initial_scale + ")"
+            );
+            // Tell d3 about the scale, else the 1st time a user zooms it'll zoom from a scale of 1
+            zoom.scale(initial_scale);
+            // Ditto for the translation
+            zoom.translate([translate_x_y, translate_x_y]);
+        }
+
+        // Determine initial positions for better performance...fewer things moving around and interacting
         nodes.forEach(function(d, i) {
             if (d.group == 0) {
-                d.fixed = true;
+                d.fixed = true; // the main article node is fixed in the center
                 d.x = width/2;
-                d.y = 15;
+                d.y = height/2;
+            } else if (d.group == 1) {
+                n_1++;
+                d.fixed = true; // group 1 nodes are fixed radially
+                d.x = (width/2) + r_1 * Math.cos(n_1*(2*Math.PI/group_1_count));
+                d.y = (height/2) + r_1 * Math.sin(n_1*(2*Math.PI/group_1_count));
             } else {
-                d.x = width/2;
-                d.y = height / 2 * i;
+                //d.fixed = true; // Uncomment this to fix the group 2 nodes radially, pretty cool actually though not as useful
+                n_2++;
+                d.x = (width/2) + r_2 * Math.cos(n_2*(2*Math.PI/group_2_count));
+                d.y = (height/2) + r_2 * Math.sin(n_2*(2*Math.PI/group_2_count));
             }
         });
 
-        force
-                .nodes(nodes)
-                .links(links)
-                .start();
+        // Start the force with our nodes and links
+        force.nodes(nodes).links(graph.links).start();
 
         var link = svg.selectAll(".link")
-                .data(bilinks)
-                .enter().append("path")
+                .data(graph.links)
+              .enter().append("line")
                 .attr("class", "link")
-                .attr("stroke-width", 0.5);
-                //.attr("marker-end", "url(#triangle)");
+                .attr("stroke-width", 0.5)
+                .attr("marker-end", "url(#triangle)"); // this last bit adds our arrow marker
 
         var node = svg.selectAll(".node")
                 .data(graph.nodes)
-                .enter().append("circle")
+              .enter().append("circle")
                 .attr("class", "node")
                 .attr("r", function(d) {
                     if (d.group == 0) {
-                        return 13;
+                        return node_0_size;
                     } else if (d.group == 1) {
-                        return 5;
+                        return node_1_size;
                     } else {
-                        return 5;
+                        return node_2_size;
                     }
                 })
-                .style("stroke", "#333")
+                .style("stroke", "#333") // should be in CSS???
                 .style("fill", function(d) { return color(d.group); })
                 .call(force.drag);
 
@@ -139,11 +191,11 @@
 
         force.on("tick", function(e) {
             link
-                    .attr("d", function(d) {
-                        return "M" + d[2].x + "," + d[2].y
-                                + "S" + d[1].x + "," + d[1].y
-                                + " " + d[0].x + "," + d[0].y;
-                        });
+                    .attr("x1", function(d) { return d.source.x; })
+                    .attr("y1", function(d) { return d.source.y; })
+                    .attr("x2", function(d) { return d.target.x; })
+                    .attr("y2", function(d) { return d.target.y; });
+
             node.attr("transform", function(d) {
                 return "translate(" + d.x + "," + d.y + ")";
             });
@@ -151,6 +203,5 @@
     });
 
 </script>
-
 
 {% endblock %}
