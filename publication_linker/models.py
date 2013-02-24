@@ -57,8 +57,12 @@ class Article(models.Model):
             # so we map to str here
             new_pubmed_id_list = list(set(total_list) - set(map(str, existing_pubmed_id_list)))
 
+            # If there are no new PubMed IDs, then stop
+            # if len(new_pubmed_id_list) == 0:
+            #     return
+
             # find all the new articles' summaries (and authors)
-            # this could take a whild
+            # this could take a while
             articles_to_save = find_articles(new_pubmed_id_list)
 
             print "%s - %s" % (datetime.now().ctime(), "ARTICLES FOUND, ARTICLES TO DB")

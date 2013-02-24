@@ -10,6 +10,9 @@ def find_articles(pubmed_id_list):
 
     articles = []
 
+    if len(pubmed_id_list) == 0:
+        return articles
+
     args = {
         'db': DB,
         'id': ','.join(pubmed_id_list)
