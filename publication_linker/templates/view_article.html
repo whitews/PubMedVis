@@ -214,11 +214,6 @@
                 })
                 .call(force.drag);
 
-        node.append("title")
-                .text(function(d) { return d.title; });
-
-        node.append("selected")
-
         force.on("tick", function(e) {
             link
                     .attr("x1", function(d) { return d.source.x; })
