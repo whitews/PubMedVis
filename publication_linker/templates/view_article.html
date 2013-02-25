@@ -19,13 +19,9 @@
 
 <h5>{{ article.title }}</h5>
 
-<hr>
-
 <div id="graph">
     <!-- D3 graph goes here -->
 </div>
-
-<hr>
 
 <ul>
 {% for ref_art in article.referenced_articles.all %}
@@ -56,6 +52,8 @@
         .charge(function(d, i) {
             if (d.group == 0) {
                 return -900;
+            } else if (d.selected == true) {
+                return -500;
             } else if (d.group == 1) {
                 return -900;
             } else {
@@ -91,6 +89,11 @@
             .attr("orient", "auto")
           .append("path")
             .attr("d", "M0,-5 L10,0 L0,5");
+
+    var default_hover_text = "Hover over a node to see article title";
+    var hover_text = d3.select("svg").append("svg:text").text(default_hover_text)
+            .attr('x', 10)
+            .attr('y', 10);
 
     d3.json("{% url 'article_relations' article.pubmed_id %}", function(error, graph) {
         var nodes = graph.nodes.slice();
@@ -141,7 +144,9 @@
         }
 
         // Determine initial positions for better performance...fewer things moving around and interacting
+        // We'll also add a boolean for whether the node is selected, used to change the node's charge
         nodes.forEach(function(d, i) {
+            d.selected = false;
             if (d.group == 0) {
                 d.fixed = true; // the main article node is fixed in the center
                 d.x = width/2;
@@ -184,10 +189,34 @@
                 })
                 .style("stroke", "#333") // should be in CSS???
                 .style("fill", function(d) { return color(d.group); })
+                .on("mouseover", function(d, i) {
+                    //d3.select(this).attr("r", 23);
+                    d.selected = true;
+                    hover_text.text(d.title);
+                    // Restart the force to reload the charge function
+                    force.start();
+                })
+                .on("mouseout", function(d, i) {
+                    d.selected = false;
+                    d3.select(this).attr("r", function() {
+                        if (d.group == 0) {
+                            return node_0_size;
+                        } else if (d.group == 1) {
+                            return node_1_size;
+                        } else {
+                            return node_2_size;
+                        }
+                    });
+                    hover_text.text(default_hover_text);
+                    // Restart the force to reload the charge function
+                    force.start();
+                })
                 .call(force.drag);
 
         node.append("title")
                 .text(function(d) { return d.title; });
+
+        node.append("selected")
 
         force.on("tick", function(e) {
             link

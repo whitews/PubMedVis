@@ -58,8 +58,8 @@ class Article(models.Model):
             new_pubmed_id_list = list(set(total_list) - set(map(str, existing_pubmed_id_list)))
 
             # If there are no new PubMed IDs, then stop
-            # if len(new_pubmed_id_list) == 0:
-            #     return
+            if len(new_pubmed_id_list) == 0:
+                return
 
             # find all the new articles' summaries (and authors)
             # this could take a while
