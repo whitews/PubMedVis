@@ -39,6 +39,12 @@ body {
     border: 1px solid #eee;
 }
 
+#selected_title {
+    position: absolute;
+    width: 700px;
+    padding: 10px;
+}
+
 .node {
     stroke: #fff;
     stroke-width: 1.5px;

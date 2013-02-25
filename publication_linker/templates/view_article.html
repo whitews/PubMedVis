@@ -20,6 +20,7 @@
 <h5>{{ article.title }}</h5>
 
 <div id="graph">
+    <div id="selected_title"></div>
     <!-- D3 graph goes here -->
 </div>
 
@@ -91,9 +92,7 @@
             .attr("d", "M0,-5 L10,0 L0,5");
 
     var default_hover_text = "Hover over a node to see article title";
-    var hover_text = d3.select("svg").append("svg:text").text(default_hover_text)
-            .attr('x', 10)
-            .attr('y', 10);
+    var hover_text = d3.select("#selected_title").text(default_hover_text);
 
     d3.json("{% url 'article_relations' article.pubmed_id %}", function(error, graph) {
         var nodes = graph.nodes.slice();
