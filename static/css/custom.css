@@ -36,13 +36,22 @@ body {
 
 /* D3 stuff */
 #graph {
+    width: 700px;
+    height: 700px;
     border: 1px solid #eee;
+    padding: 0px;
+    margin: 0px;
 }
 
 #selected_title {
     position: absolute;
-    width: 700px;
+    width: 680px;
+    margin: 0px;
     padding: 10px;
+    border: 0px;
+    font-weight: bold;
+    font-size: 21px;
+    background-color: rgba(255,255,255,0.9);
 }
 
 .node {

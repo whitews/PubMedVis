@@ -19,6 +19,8 @@
 
 <h5>{{ article.title }}</h5>
 
+<hr>
+
 <div id="graph">
     <div id="selected_title"></div>
     <!-- D3 graph goes here -->
@@ -45,7 +47,7 @@
             if (d.source.group == 1) {
                 return 1.0;
             } else if (d.source.group == 2) {
-                return 0;
+                return 0.2;
             } else {
                 return 0;
             }
