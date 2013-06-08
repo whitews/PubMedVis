@@ -4,5 +4,8 @@ virtualenv:
 python:
   - "2.7"
 script: python manage-test.py test publication_linker
+install:
+  - pip install django --use-mirrors
+script: python manage.py test publication_linker
 notifications:
   email: false
