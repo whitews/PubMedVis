@@ -5,6 +5,7 @@ python:
   - "2.7"
 install:
   - pip install django --use-mirrors
+  - pip install django-extensions --use-mirrors
 script: python manage-test.py test publication_linker
 notifications:
   email: false
