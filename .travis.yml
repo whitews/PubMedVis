@@ -3,9 +3,8 @@ virtualenv:
   system_site_packages: true
 python:
   - "2.7"
-script: python manage-test.py test publication_linker
 install:
   - pip install django --use-mirrors
-script: python manage.py test publication_linker
+script: python manage-test.py test publication_linker
 notifications:
   email: false
